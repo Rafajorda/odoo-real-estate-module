@@ -9,6 +9,7 @@ from dateutil.relativedelta import relativedelta
 class EstateProperty(models.Model):
     _name = "estate.property"
     _description = "Real Estate Property"
+    _order = "id desc"
     
     # SQL constraints
     _check_expected_price = models.Constraint(

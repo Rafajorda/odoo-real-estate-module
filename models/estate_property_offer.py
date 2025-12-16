@@ -7,6 +7,7 @@ from odoo.exceptions import UserError
 class EstatePropertyOffer(models.Model):
     _name = "estate.property.offer"
     _description = "Real Estate Property Offer"
+    _order = "price desc"
     
     # SQL constraints
     _check_price = models.Constraint(
@@ -24,6 +25,7 @@ class EstatePropertyOffer(models.Model):
     )
     partner_id = fields.Many2one("res.partner", required=True)
     property_id = fields.Many2one("estate.property", required=True)
+    property_type_id = fields.Many2one(related="property_id.property_type_id", string="Property Type", store=True)
     
     # Action methods
     def action_accept(self):
