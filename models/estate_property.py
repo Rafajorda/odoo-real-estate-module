@@ -1,13 +1,24 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare, float_is_zero
 from dateutil.relativedelta import relativedelta
 
 
 class EstateProperty(models.Model):
     _name = "estate.property"
     _description = "Real Estate Property"
+    
+    # SQL constraints
+    _check_expected_price = models.Constraint(
+        'CHECK(expected_price > 0)',
+        'The expected price must be strictly positive.'
+    )
+    _check_selling_price = models.Constraint(
+        'CHECK(selling_price >= 0)',
+        'The selling price must be positive.'
+    )
 
     # Basic fields
     name = fields.Char(required=True)
@@ -77,6 +88,21 @@ class EstateProperty(models.Model):
         else:
             self.garden_area = 0
             self.garden_orientation = False
+    
+    # Constraints
+    @api.constrains('selling_price', 'expected_price')
+    def _check_selling_price(self):
+        for record in self:
+            # Skip the check if selling_price is zero (not yet set)
+            if not float_is_zero(record.selling_price, precision_digits=2):
+                # Calculate 90% of expected price
+                min_selling_price = record.expected_price * 0.9
+                # Compare selling_price with min_selling_price
+                if float_compare(record.selling_price, min_selling_price, precision_digits=2) < 0:
+                    raise ValidationError(
+                        "The selling price cannot be lower than 90%% of the expected price. "
+                        "Expected: %.2f, Minimum allowed: %.2f" % (record.expected_price, min_selling_price)
+                    )
     
     # Action methods
     def action_cancel(self):
